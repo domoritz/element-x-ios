@@ -114,14 +114,16 @@ class RoomTimelineController: RoomTimelineControllerProtocol {
         }
 
         switch timelineItem {
+        case let item as ImageRoomTimelineItem:
+            return .displayMediaItem(item: item)
         case let item as VideoRoomTimelineItem:
             await loadVideoForTimelineItem(item)
             guard let index = timelineItems.firstIndex(where: { $0.id == itemId }),
                   let item = timelineItems[index] as? VideoRoomTimelineItem else {
                 return .none
             }
-            if let videoURL = item.cachedVideoURL {
-                return .displayVideo(videoURL: videoURL)
+            if item.cachedVideoURL != nil {
+                return .displayMediaItem(item: item)
             }
             return .none
         case let item as FileRoomTimelineItem:

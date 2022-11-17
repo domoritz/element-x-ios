@@ -18,7 +18,7 @@ import Foundation
 import UIKit
 
 enum RoomScreenViewModelAction {
-    case displayVideo(videoURL: URL)
+    case displayMediaItem(item: EventBasedTimelineItemProtocol)
     case displayFile(fileURL: URL, title: String?)
 }
 

@@ -47,8 +47,8 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
             guard let self else { return }
             MXLog.debug("RoomScreenViewModel did complete with result: \(result).")
             switch result {
-            case .displayVideo(let videoURL):
-                self.displayVideo(for: videoURL)
+            case .displayMediaItem(let item):
+                self.displayMediaViewer(for: item)
             case .displayFile(let fileURL, let title):
                 self.displayFile(for: fileURL, with: title)
             }
@@ -64,6 +64,20 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
     }
 
     // MARK: - Private
+
+    private func displayMediaViewer(for item: EventBasedTimelineItemProtocol?) {
+        let timelineController = MediaTimelineController(roomTimelineController: parameters.timelineController)
+        let params = MediaViewerCoordinatorParameters(navigationController: navigationController,
+                                                      timelineController: timelineController,
+                                                      mediaProvider: parameters.mediaProvider,
+                                                      item: item)
+        let coordinator = MediaViewerCoordinator(parameters: params)
+        coordinator.callback = { [weak self] _ in
+            self?.navigationController.pop()
+        }
+
+        navigationController.push(coordinator)
+    }
 
     private func displayVideo(for videoURL: URL) {
         let params = VideoPlayerCoordinatorParameters(videoURL: videoURL)
