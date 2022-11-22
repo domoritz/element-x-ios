@@ -52,25 +52,20 @@ class ClientProxy: ClientProxyProtocol {
     private let client: ClientProtocol
     private let backgroundTaskService: BackgroundTaskServiceProtocol
     private var sessionVerificationControllerProxy: SessionVerificationControllerProxy?
+    private let mediaProxy: MediaProxyProtocol
     private let clientQueue: DispatchQueue
     
     private var slidingSyncObserverToken: StoppableSpawn?
-    private var slidingSync: SlidingSync!
+    private var slidingSync: SlidingSync?
     
-    var roomSummaryProviderInternal: RoomSummaryProviderProtocol!
-    var roomSummaryProvider: RoomSummaryProviderProtocol {
-        guard let roomSummaryProviderInternal else {
-            fatalError("There is an issue with ClientProxy object initialization")
-        }
-        return roomSummaryProviderInternal
-    }
+    var roomSummaryProvider: RoomSummaryProviderProtocol?
     
     deinit {
         // These need to be inlined instead of using stopSync()
         // as we can't call async methods safely from deinit
         client.setDelegate(delegate: nil)
         slidingSyncObserverToken?.cancel()
-        slidingSync.setObserver(observer: nil)
+        slidingSync?.setObserver(observer: nil)
     }
     
     let callbacks = PassthroughSubject<ClientProxyCallback, Never>()
@@ -81,10 +76,12 @@ class ClientProxy: ClientProxyProtocol {
         self.backgroundTaskService = backgroundTaskService
         clientQueue = .init(label: "ClientProxyQueue",
                             attributes: .concurrent)
+        mediaProxy = MediaProxy(client: client,
+                                clientQueue: clientQueue)
 
         await Task.dispatch(on: clientQueue) {
             do {
-                let slidingSyncBuilder = try client.slidingSync().homeserver(url: BuildSettings.slidingSyncProxyBaseURL.absoluteString)
+                let slidingSyncBuilder = try client.slidingSync().homeserver(url: ElementSettings.shared.slidingSyncProxyBaseURLString)
 
                 let slidingSyncView = try SlidingSyncViewBuilder()
                     .timelineLimit(limit: 10)
@@ -94,16 +91,18 @@ class ClientProxy: ClientProxyProtocol {
                     .syncMode(mode: .fullSync)
                     .build()
 
-                self.slidingSync = try slidingSyncBuilder
+                let slidingSync = try slidingSyncBuilder
                     .addView(v: slidingSyncView)
                     .withCommonExtensions()
                     .build()
-
-                self.roomSummaryProviderInternal = RoomSummaryProvider(slidingSyncController: self.slidingSync,
-                                                                       slidingSyncView: slidingSyncView,
-                                                                       roomMessageFactory: RoomMessageFactory())
+                
+                self.roomSummaryProvider = RoomSummaryProvider(slidingSyncController: slidingSync,
+                                                               slidingSyncView: slidingSyncView,
+                                                               roomMessageFactory: RoomMessageFactory())
+                
+                self.slidingSync = slidingSync
             } catch {
-                fatalError("Failed configuring sliding sync")
+                MXLog.error("Failed configuring sliding sync with error: \(error)")
             }
         }
 
@@ -150,15 +149,15 @@ class ClientProxy: ClientProxyProtocol {
             return
         }
         
-        slidingSync.setObserver(observer: WeakClientProxyWrapper(clientProxy: self))
-        slidingSyncObserverToken = slidingSync.sync()
+        slidingSync?.setObserver(observer: WeakClientProxyWrapper(clientProxy: self))
+        slidingSyncObserverToken = slidingSync?.sync()
     }
     
     func stopSync() {
         client.setDelegate(delegate: nil)
         
         slidingSyncObserverToken?.cancel()
-        slidingSync.setObserver(observer: nil)
+        slidingSync?.setObserver(observer: nil)
     }
     
     func roomForIdentifier(_ identifier: String) async -> RoomProxyProtocol? {
@@ -208,25 +207,7 @@ class ClientProxy: ClientProxyProtocol {
             .failure(.failedSettingAccountData)
         }
     }
-    
-    func mediaSourceForURLString(_ urlString: String) -> MatrixRustSDK.MediaSource {
-        MatrixRustSDK.mediaSourceFromUrl(url: urlString)
-    }
-    
-    func loadMediaContentForSource(_ source: MatrixRustSDK.MediaSource) async throws -> Data {
-        try await Task.dispatch(on: clientQueue) {
-            let bytes = try self.client.getMediaContent(source: source)
-            return Data(bytes: bytes, count: bytes.count)
-        }
-    }
-    
-    func loadMediaThumbnailForSource(_ source: MatrixRustSDK.MediaSource, width: UInt, height: UInt) async throws -> Data {
-        try await Task.dispatch(on: clientQueue) {
-            let bytes = try self.client.getMediaThumbnail(source: source, width: UInt64(width), height: UInt64(height))
-            return Data(bytes: bytes, count: bytes.count)
-        }
-    }
-    
+
     func sessionVerificationControllerProxy() async -> Result<SessionVerificationControllerProxyProtocol, ClientProxyError> {
         await Task.dispatch(on: clientQueue) {
             do {
@@ -247,12 +228,38 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
+
+    // swiftlint:disable:next function_parameter_count
+    func setPusher(pushkey: String,
+                   kind: PusherKind?,
+                   appId: String,
+                   appDisplayName: String,
+                   deviceDisplayName: String,
+                   profileTag: String?,
+                   lang: String,
+                   url: String?,
+                   format: PushFormat?,
+                   defaultPayload: [AnyHashable: Any]?) async throws {
+//        let defaultPayloadString = jsonString(from: defaultPayload)
+//        try await Task.dispatch(on: .global()) {
+//            try self.client.setPusher(pushkey: pushkey,
+//                                      kind: kind?.rustValue,
+//                                      appId: appId,
+//                                      appDisplayName: appDisplayName,
+//                                      deviceDisplayName: deviceDisplayName,
+//                                      profileTag: profileTag,
+//                                      lang: lang,
+//                                      url: url,
+//                                      format: format?.rustValue,
+//                                      defaultPayload: defaultPayloadString)
+//        }
+    }
     
     // MARK: Private
 
     private func roomTupleForIdentifier(_ identifier: String) -> (SlidingSyncRoom?, Room?) {
         do {
-            let slidingSyncRoom = try slidingSync.getRoom(roomId: identifier)
+            let slidingSyncRoom = try slidingSync?.getRoom(roomId: identifier)
             let fullRoom = slidingSyncRoom?.fullRoom()
 
             return (slidingSyncRoom, fullRoom)
@@ -271,8 +278,33 @@ class ClientProxy: ClientProxyProtocol {
     }
     
     fileprivate func didReceiveSlidingSyncUpdate(summary: UpdateSummary) {
-        roomSummaryProvider.updateRoomsWithIdentifiers(summary.rooms)
+        roomSummaryProvider?.updateRoomsWithIdentifiers(summary.rooms)
         
         callbacks.send(.receivedSyncUpdate)
+    }
+
+    /// Convenience method to get the json string of an Encodable
+    private func jsonString(from dictionary: [AnyHashable: Any]?) -> String? {
+        guard let dictionary,
+              let data = try? JSONSerialization.data(withJSONObject: dictionary,
+                                                     options: [.fragmentsAllowed]) else {
+            return nil
+        }
+
+        return String(data: data, encoding: .utf8)
+    }
+}
+
+extension ClientProxy: MediaProxyProtocol {
+    func mediaSourceForURLString(_ urlString: String) -> MediaSourceProxy {
+        mediaProxy.mediaSourceForURLString(urlString)
+    }
+
+    func loadMediaContentForSource(_ source: MediaSourceProxy) async throws -> Data {
+        try await mediaProxy.loadMediaContentForSource(source)
+    }
+
+    func loadMediaThumbnailForSource(_ source: MediaSourceProxy, width: UInt, height: UInt) async throws -> Data {
+        try await mediaProxy.loadMediaThumbnailForSource(source, width: width, height: height)
     }
 }

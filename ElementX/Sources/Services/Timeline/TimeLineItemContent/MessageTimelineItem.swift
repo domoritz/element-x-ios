@@ -23,6 +23,13 @@ protocol MessageContentProtocol: RoomMessageEventContentProtocol {
     var body: String { get }
 }
 
+/// The delivery status for the item.
+enum MessageTimelineItemDeliveryStatus: Equatable {
+    case unknown
+    case sending
+    case sent(elapsedTime: TimeInterval)
+}
+
 /// A timeline item that represents an `m.room.message` event.
 struct MessageTimelineItem<Content: MessageContentProtocol> {
     let item: MatrixRustSDK.EventTimelineItem
@@ -35,6 +42,15 @@ struct MessageTimelineItem<Content: MessageContentProtocol> {
             return txnID
         case .eventId(let eventID):
             return eventID
+        }
+    }
+    
+    var deliveryStatus: MessageTimelineItemDeliveryStatus {
+        switch item.key() {
+        case .transactionId:
+            return .sending
+        case .eventId:
+            return .sent(elapsedTime: Date().timeIntervalSince1970 - originServerTs.timeIntervalSince1970)
         }
     }
 
@@ -97,8 +113,8 @@ extension MatrixRustSDK.ImageMessageContent: MessageContentProtocol { }
 
 /// A timeline item that represents an `m.room.message` event with a `msgtype` of `m.image`.
 extension MessageTimelineItem where Content == MatrixRustSDK.ImageMessageContent {
-    var source: MediaSource {
-        MediaSource(source: content.source)
+    var source: MediaSourceProxy {
+        .init(source: content.source)
     }
 
     var width: CGFloat? {
@@ -118,15 +134,15 @@ extension MatrixRustSDK.VideoMessageContent: MessageContentProtocol { }
 
 /// A timeline item that represents an `m.room.message` event with a `msgtype` of `m.video`.
 extension MessageTimelineItem where Content == MatrixRustSDK.VideoMessageContent {
-    var source: MediaSource {
-        MediaSource(source: content.source)
+    var source: MediaSourceProxy {
+        .init(source: content.source)
     }
 
-    var thumbnailSource: MediaSource? {
+    var thumbnailSource: MediaSourceProxy? {
         guard let src = content.info?.thumbnailSource else {
             return nil
         }
-        return MediaSource(source: src)
+        return .init(source: src)
     }
 
     var duration: UInt64 {
@@ -150,14 +166,14 @@ extension MatrixRustSDK.FileMessageContent: MessageContentProtocol { }
 
 /// A timeline item that represents an `m.room.message` event with a `msgtype` of `m.file`.
 extension MessageTimelineItem where Content == MatrixRustSDK.FileMessageContent {
-    var source: MediaSource {
-        MediaSource(source: content.source)
+    var source: MediaSourceProxy {
+        .init(source: content.source)
     }
 
-    var thumbnailSource: MediaSource? {
+    var thumbnailSource: MediaSourceProxy? {
         guard let src = content.info?.thumbnailSource else {
             return nil
         }
-        return MediaSource(source: src)
+        return .init(source: src)
     }
 }

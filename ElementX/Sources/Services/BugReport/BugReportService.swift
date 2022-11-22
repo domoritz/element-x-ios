@@ -61,7 +61,7 @@ class BugReportService: BugReportServiceProtocol {
         //  also enable logging crashes, to send them with bug reports
         MXLogger.logCrashes(true)
         //  set build version for logger
-        MXLogger.setBuildVersion(ElementInfoPlist.cfBundleShortVersionString)
+        MXLogger.buildVersion = InfoPlistReader.target.bundleShortVersionString
     }
 
     // MARK: - BugReportServiceProtocol
@@ -151,8 +151,8 @@ class BugReportService: BugReportServiceProtocol {
         return [
             MultipartFormData(key: "user_agent", type: .text(value: "iOS")),
             MultipartFormData(key: "app", type: .text(value: applicationId)),
-            MultipartFormData(key: "version", type: .text(value: ElementInfoPlist.cfBundleShortVersionString)),
-            MultipartFormData(key: "build", type: .text(value: ElementInfoPlist.cfBundleVersion)),
+            MultipartFormData(key: "version", type: .text(value: InfoPlistReader.target.bundleShortVersionString)),
+            MultipartFormData(key: "build", type: .text(value: InfoPlistReader.target.bundleVersion)),
             MultipartFormData(key: "os", type: .text(value: os)),
             MultipartFormData(key: "resolved_language", type: .text(value: Bundle.preferredLanguages[0])),
             MultipartFormData(key: "user_language", type: .text(value: Bundle.elementLanguage ?? "null")),
@@ -180,12 +180,11 @@ class BugReportService: BugReportServiceProtocol {
         MXLog.debug("zipFiles: includeLogs: \(includeLogs), includeCrashLog: \(includeCrashLog)")
 
         var filesToCompress: [URL] = []
-        if includeLogs, let logFiles = MXLogger.logFiles() {
-            let urls = logFiles.compactMap { URL(fileURLWithPath: $0) }
-            filesToCompress.append(contentsOf: urls)
+        if includeLogs {
+            filesToCompress.append(contentsOf: MXLogger.logFiles)
         }
-        if includeCrashLog, let crashLogFile = MXLogger.crashLog() {
-            filesToCompress.append(URL(fileURLWithPath: crashLogFile))
+        if includeCrashLog, let crashLogFile = MXLogger.crashLog {
+            filesToCompress.append(crashLogFile)
         }
 
         var totalSize = 0

@@ -25,13 +25,19 @@ final class ElementSettings: ObservableObject {
         case timelineStyle
         case enableAnalytics
         case isIdentifiedForAnalytics
+        case slidingSyncProxyBaseURLString
+        case enableInAppNotifications
+        case pusherProfileTag
     }
 
     static let shared = ElementSettings()
 
     /// UserDefaults to be used on reads and writes.
     static var store: UserDefaults {
-        .standard
+        guard let userDefaults = UserDefaults(suiteName: InfoPlistReader.target.appGroupIdentifier) else {
+            fatalError("Fail to load shared UserDefaults")
+        }
+        return userDefaults
     }
 
     private init() {
@@ -59,4 +65,18 @@ final class ElementSettings: ObservableObject {
 
     @AppStorage(UserDefaultsKeys.timelineStyle.rawValue, store: store)
     var timelineStyle = BuildSettings.defaultRoomTimelineStyle
+
+    // MARK: - Client
+
+    @AppStorage(UserDefaultsKeys.slidingSyncProxyBaseURLString.rawValue, store: store)
+    var slidingSyncProxyBaseURLString = BuildSettings.defaultSlidingSyncProxyBaseURLString
+
+    // MARK: - Notifications
+
+    @AppStorage(UserDefaultsKeys.enableInAppNotifications.rawValue, store: store)
+    var enableInAppNotifications = true
+
+    @AppStorage(UserDefaultsKeys.pusherProfileTag.rawValue, store: store)
+    /// Tag describing which set of device specific rules a pusher executes.
+    var pusherProfileTag: String?
 }
