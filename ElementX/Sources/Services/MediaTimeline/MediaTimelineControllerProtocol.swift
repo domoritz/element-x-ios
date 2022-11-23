@@ -14,9 +14,43 @@
 // limitations under the License.
 //
 
+import Combine
 import Foundation
+
+enum MediaTimelineItem: Identifiable {
+    case image(ImageRoomTimelineItem)
+    case video(VideoRoomTimelineItem)
+
+    var id: String {
+        switch self {
+        case .image(let item):
+            return item.id
+        case .video(let item):
+            return item.id
+        }
+    }
+}
+
+enum MediaTimelineControllerCallback {
+    case updatedTimelineItems
+    case updatedTimelineItem(_ itemId: String)
+    case startedBackPaginating
+    case finishedBackPaginating
+}
+
+enum MediaTimelineControllerError: Error {
+    case generic
+}
 
 @MainActor
 protocol MediaTimelineControllerProtocol {
-    var mediaItems: [EventBasedTimelineItemProtocol] { get }
+    var mediaItems: [MediaTimelineItem] { get }
+
+    var callbacks: PassthroughSubject<MediaTimelineControllerCallback, Never> { get }
+
+    func processItemAppearance(_ itemId: String) async
+
+    func processItemDisappearance(_ itemId: String) async
+
+    func paginateBackwards(_ count: UInt) async -> Result<Void, MediaTimelineControllerError>
 }

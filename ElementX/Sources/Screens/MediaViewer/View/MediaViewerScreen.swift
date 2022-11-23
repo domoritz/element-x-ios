@@ -21,8 +21,6 @@ struct MediaViewerScreen: View {
     // MARK: Private
     
     @Environment(\.colorScheme) private var colorScheme
-    @State private var selectedIndex = 0
-    @State private var items: [EventBasedTimelineItemProtocol] = []
 
     // MARK: Public
     
@@ -33,22 +31,38 @@ struct MediaViewerScreen: View {
     var body: some View {
         TabView(selection: $context.selectedIndex) {
             ForEach(0..<context.viewState.items.count, id: \.self) { index in
-                let item = context.viewState.items[index]
+                let mediaItem = context.viewState.items[index]
 
-                if let item = item as? ImageRoomTimelineItem {
+                switch mediaItem {
+                case .image(let item):
                     page(with: item)
                         .tag(index)
-                } else if let item = item as? VideoRoomTimelineItem {
+                case .video(let item):
                     page(with: item)
                         .tag(index)
-                } else {
-                    EmptyView()
-                        .tag(index)
+//                        .onAppear {
+//                            context.send(viewAction: .itemAppeared(id: item.id))
+//                        }
+//                        .onDisappear {
+//                            context.send(viewAction: .itemDisappeared(id: item.id))
+//                        }
                 }
             }
         }
+        .background(Color.black.ignoresSafeArea())
         .tabViewStyle(.page(indexDisplayMode: .always))
         .id(context.viewState.viewId)
+        .toolbar { toolbar }
+//        .onChange(of: context.selectedIndex) { [oldValue = context.selectedIndex] newValue in
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                if let item = context.viewState.items[safe: newValue] {
+//                    context.send(viewAction: .itemAppeared(id: item.id))
+//                }
+//                if let oldItem = context.viewState.items[safe: oldValue] {
+//                    context.send(viewAction: .itemDisappeared(id: oldItem.id))
+//                }
+//            }
+//        }
     }
 
     @ViewBuilder
@@ -58,8 +72,7 @@ struct MediaViewerScreen: View {
                 .resizable()
                 .scaledToFit()
         } else {
-            ProgressView(ElementL10n.loading)
-                .frame(maxWidth: .infinity)
+            loading()
         }
     }
 
@@ -68,21 +81,45 @@ struct MediaViewerScreen: View {
         if let url = item.cachedVideoURL {
             // ready to play
             VideoPlayer(player: player(with: url))
+//                .onTapGesture {
+//                    if player.timeControlStatus == .playing {
+//                        player.pause()
+//                    } else {
+//                        player.play()
+//                    }
+//                }
         } else if let image = item.image {
             ZStack {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                Image(systemName: "play.circle.fill")
-                    .resizable()
-                    .frame(width: 50, height: 50)
-                    .background(.ultraThinMaterial, in: Circle())
+                ProgressView()
                     .foregroundColor(.white)
+                    .padding()
+                    .background(.ultraThinMaterial, in: Circle())
             }
         } else {
-            ProgressView(ElementL10n.loading)
-                .frame(maxWidth: .infinity)
+            loading()
         }
+    }
+
+    @ToolbarContentBuilder
+    var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            if context.viewState.isModallyPresented {
+                Button { context.send(viewAction: .cancel) } label: {
+                    Image(systemName: "xmark")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                }
+                .accessibilityIdentifier("dismissButton")
+            }
+        }
+    }
+
+    private func loading() -> some View {
+        ProgressView(ElementL10n.loading)
+            .frame(maxWidth: .infinity)
     }
 
     private func player(with url: URL, autoplay: Bool = true) -> AVPlayer {

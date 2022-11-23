@@ -22,6 +22,7 @@ struct MediaViewerCoordinatorParameters {
     let timelineController: MediaTimelineControllerProtocol
     let mediaProvider: MediaProviderProtocol
     let item: EventBasedTimelineItemProtocol?
+    let isModallyPresented: Bool
 }
 
 enum MediaViewerCoordinatorAction {
@@ -39,7 +40,8 @@ final class MediaViewerCoordinator: CoordinatorProtocol {
 
         viewModel = MediaViewerViewModel(timelineController: parameters.timelineController,
                                          mediaProvider: parameters.mediaProvider,
-                                         itemId: parameters.item?.id)
+                                         itemId: parameters.item?.id,
+                                         isModallyPresented: parameters.isModallyPresented)
     }
     
     // MARK: - Public

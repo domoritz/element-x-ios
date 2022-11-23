@@ -27,8 +27,9 @@ enum MediaViewerViewModelAction {
 // MARK: View
 
 struct MediaViewerViewState: BindableState {
-    var items: [EventBasedTimelineItemProtocol] = []
+    var items: [MediaTimelineItem] = []
     var viewId = UUID()
+    let isModallyPresented: Bool
     var bindings: MediaViewerViewStateBindings
 }
 
@@ -40,6 +41,8 @@ struct MediaViewerViewStateBindings {
 }
 
 enum MediaViewerViewAction {
+    case itemAppeared(id: String)
+    case itemDisappeared(id: String)
     case cancel
 }
 

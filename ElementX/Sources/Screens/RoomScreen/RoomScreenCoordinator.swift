@@ -66,17 +66,22 @@ final class RoomScreenCoordinator: CoordinatorProtocol {
     // MARK: - Private
 
     private func displayMediaViewer(for item: EventBasedTimelineItemProtocol?) {
-        let timelineController = MediaTimelineController(roomTimelineController: parameters.timelineController)
+        let timelineController = MediaTimelineController(roomTimelineController: parameters.timelineController,
+                                                         mediaProvider: parameters.mediaProvider)
         let params = MediaViewerCoordinatorParameters(navigationController: navigationController,
                                                       timelineController: timelineController,
                                                       mediaProvider: parameters.mediaProvider,
-                                                      item: item)
+                                                      item: item,
+                                                      isModallyPresented: true)
         let coordinator = MediaViewerCoordinator(parameters: params)
         coordinator.callback = { [weak self] _ in
-            self?.navigationController.pop()
+            self?.navigationController.dismissSheet()
         }
 
-        navigationController.push(coordinator)
+        let navController = NavigationController()
+        navController.setRootCoordinator(coordinator)
+
+        navigationController.presentSheet(navController)
     }
 
     private func displayVideo(for videoURL: URL) {

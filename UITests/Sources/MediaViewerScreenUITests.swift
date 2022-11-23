@@ -17,6 +17,4 @@
 import ElementX
 import XCTest
 
-class MediaViewerScreenUITests: XCTestCase {
-    
-}
+class MediaViewerScreenUITests: XCTestCase { }

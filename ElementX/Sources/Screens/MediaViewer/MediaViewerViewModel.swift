@@ -35,13 +35,29 @@ class MediaViewerViewModel: MediaViewerViewModelType, MediaViewerViewModelProtoc
 
     init(timelineController: MediaTimelineControllerProtocol,
          mediaProvider: MediaProviderProtocol,
-         itemId: String? = nil) {
+         itemId: String? = nil,
+         isModallyPresented: Bool = true) {
         self.timelineController = timelineController
         self.mediaProvider = mediaProvider
         self.itemId = itemId
 
         let selectedIndex = timelineController.mediaItems.firstIndex { $0.id == itemId } ?? 0
-        super.init(initialViewState: MediaViewerViewState(bindings: .init(selectedIndex: selectedIndex)))
+        super.init(initialViewState: MediaViewerViewState(isModallyPresented: isModallyPresented,
+                                                          bindings: .init(selectedIndex: selectedIndex)))
+
+        timelineController.callbacks
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] callback in
+                guard let self else { return }
+
+                switch callback {
+                case .updatedTimelineItems, .updatedTimelineItem:
+                    self.updateItems()
+                case .startedBackPaginating, .finishedBackPaginating:
+                    break
+                }
+            }
+            .store(in: &cancellables)
 
         updateItems()
     }
@@ -50,6 +66,10 @@ class MediaViewerViewModel: MediaViewerViewModelType, MediaViewerViewModelProtoc
     
     override func process(viewAction: MediaViewerViewAction) async {
         switch viewAction {
+        case .itemAppeared(let id):
+            await timelineController.processItemAppearance(id)
+        case .itemDisappeared(let id):
+            await timelineController.processItemDisappearance(id)
         case .cancel:
             callback?(.cancel)
         }

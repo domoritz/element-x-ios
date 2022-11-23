@@ -14,20 +14,42 @@
 // limitations under the License.
 //
 
+import Combine
 import Foundation
 
 class MockMediaTimelineController: MediaTimelineControllerProtocol {
-    var mediaItems: [EventBasedTimelineItemProtocol] = [
-        TextRoomTimelineItem(id: UUID().uuidString,
-                             text: "Let’s get lunch soon! New salad place opened up 🥗. When are y’all free? 🤗",
-                             timestamp: "10:11 AM",
-                             inGroupState: .beginning,
-                             isOutgoing: false,
-                             isEditable: false,
-                             senderId: "",
-                             senderDisplayName: "Helena",
-                             properties: RoomTimelineItemProperties(reactions: [
-                                 AggregatedReaction(key: "🙌", count: 1, isHighlighted: true)
-                             ]))
+    var mediaItems: [MediaTimelineItem] = [
+        .image(ImageRoomTimelineItem(id: UUID().uuidString,
+                                     text: "Blurhashed image",
+                                     timestamp: "Now",
+                                     inGroupState: .single,
+                                     isOutgoing: false,
+                                     isEditable: false,
+                                     senderId: "Bob",
+                                     source: nil,
+                                     image: Asset.Images.appLogo.image,
+                                     aspectRatio: 0.7,
+                                     blurhash: "L%KUc%kqS$RP?Ks,WEf8OlrqaekW")),
+        .image(ImageRoomTimelineItem(id: UUID().uuidString,
+                                     text: "Blurhashed image",
+                                     timestamp: "Now",
+                                     inGroupState: .single,
+                                     isOutgoing: false,
+                                     isEditable: false,
+                                     senderId: "Bob",
+                                     source: nil,
+                                     image: Asset.Images.appLogo.image,
+                                     aspectRatio: 0.7,
+                                     blurhash: "L%KUc%kqS$RP?Ks,WEf8OlrqaekW"))
     ]
+
+    let callbacks = PassthroughSubject<MediaTimelineControllerCallback, Never>()
+
+    func processItemAppearance(_ itemId: String) async { }
+
+    func processItemDisappearance(_ itemId: String) async { }
+
+    func paginateBackwards(_ count: UInt) async -> Result<Void, MediaTimelineControllerError> {
+        .failure(.generic)
+    }
 }
