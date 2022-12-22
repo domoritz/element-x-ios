@@ -115,8 +115,8 @@ final class AppSettings: ObservableObject {
     
     // MARK: - Room Screen
     
-    @AppStorage(UserDefaultsKeys.timelineStyle.rawValue, store: store)
-    var timelineStyle = TimelineStyle.bubbles
+    @UserDefault(key: UserDefaultsKeys.timelineStyle.rawValue, defaultValue: TimelineStyle.bubbles, storage: store)
+    var timelineStyle
 
     // MARK: - Client
 

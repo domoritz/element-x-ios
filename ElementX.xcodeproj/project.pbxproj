@@ -58,6 +58,7 @@
 		172E6E9A612ADCF10A62CF13 /* BugReportServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A68BCE6438873D2661D93D0 /* BugReportServiceProtocol.swift */; };
 		1833A04F2953249E009AA2AE /* ReadMarkerRoomTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1833A04E2953249E009AA2AE /* ReadMarkerRoomTimelineView.swift */; };
 		1833A051295324B8009AA2AE /* ReadMarkerRoomTimelineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1833A050295324B8009AA2AE /* ReadMarkerRoomTimelineItem.swift */; };
+		1833A05329544963009AA2AE /* UserDefaultsBackedPropertyWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1833A05229544962009AA2AE /* UserDefaultsBackedPropertyWrapper.swift */; };
 		187E18F21EF4DA244E436E58 /* BugReportViewModelProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28959C7DB36C7688A01D4045 /* BugReportViewModelProtocol.swift */; };
 		191161FE9E0DA89704301F37 /* Untranslated.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2F7194F440375338F8E2487 /* Untranslated.strings */; };
 		1950A80CD198BED283DFC2CE /* ClientProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F2958E6D247AE2516BEEE8 /* ClientProxy.swift */; };
@@ -577,6 +578,7 @@
 		179423E34EE846E048E49CBF /* MediaSourceProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSourceProxy.swift; sourceTree = "<group>"; };
 		1833A04E2953249E009AA2AE /* ReadMarkerRoomTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadMarkerRoomTimelineView.swift; sourceTree = "<group>"; };
 		1833A050295324B8009AA2AE /* ReadMarkerRoomTimelineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadMarkerRoomTimelineItem.swift; sourceTree = "<group>"; };
+		1833A05229544962009AA2AE /* UserDefaultsBackedPropertyWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserDefaultsBackedPropertyWrapper.swift; sourceTree = "<group>"; };
 		184CF8C196BE143AE226628D /* DecorationTimelineItemProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecorationTimelineItemProtocol.swift; sourceTree = "<group>"; };
 		18F2958E6D247AE2516BEEE8 /* ClientProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientProxy.swift; sourceTree = "<group>"; };
 		18FE0CDF1FFA92EA7EE17B0B /* RoomTimelineControllerFactoryProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomTimelineControllerFactoryProtocol.swift; sourceTree = "<group>"; };
@@ -2163,17 +2165,18 @@
 			children = (
 				E24B88AD3D1599E8CB1376E0 /* AvatarSize.swift */,
 				E5272BC4A60B6AD7553BACA1 /* BlurHashDecode.swift */,
+				44BBB96FAA2F0D53C507396B /* Extensions */,
+				8F9A844EB44B6AD7CA18FD96 /* HTMLParsing */,
 				6A580295A56B55A856CC4084 /* InfoPlistReader.swift */,
+				06501F0E978B2D5C92771DC7 /* Logging */,
 				6AD1A853D605C2146B0DC028 /* MatrixEntityRegex.swift */,
 				C789E7BFC066CF39B8AE0974 /* NetworkMonitor.swift */,
 				F754E66A8970963B15B2A41E /* PermalinkBuilder.swift */,
 				53482ECA4B6633961EC224F5 /* ScrollViewAdapter.swift */,
+				052CC920F473C10B509F9FC1 /* SwiftUI */,
 				BB3073CCD77D906B330BC1D6 /* Tests.swift */,
 				1F2529D434C750ED78ADF1ED /* UserAgentBuilder.swift */,
-				44BBB96FAA2F0D53C507396B /* Extensions */,
-				8F9A844EB44B6AD7CA18FD96 /* HTMLParsing */,
-				06501F0E978B2D5C92771DC7 /* Logging */,
-				052CC920F473C10B509F9FC1 /* SwiftUI */,
+				1833A05229544962009AA2AE /* UserDefaultsBackedPropertyWrapper.swift */,
 				DA5F79E290EB586FC98AAC63 /* UserNotifications */,
 			);
 			path = Other;
@@ -3099,6 +3102,7 @@
 				5D430CDE11EAC3E8E6B80A66 /* RoomTimelineViewFactory.swift in Sources */,
 				297CD0A27C87B0C50FF192EE /* RoomTimelineViewFactoryProtocol.swift in Sources */,
 				CF82143AA4A4F7BD11D22946 /* RoomTimelineViewProvider.swift in Sources */,
+				1833A05329544963009AA2AE /* UserDefaultsBackedPropertyWrapper.swift in Sources */,
 				B2F8E01ABA1BA30265B4ECBE /* RoundedCornerShape.swift in Sources */,
 				50C90117FE25390BFBD40173 /* RustTracing.swift in Sources */,
 				CC736DA1AA8F8B9FD8785009 /* ScreenshotDetector.swift in Sources */,
