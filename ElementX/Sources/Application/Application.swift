@@ -35,6 +35,7 @@ struct Application: App {
                 EmptyView()
             } else {
                 applicationCoordinator.toPresentable()
+                    .environment(\.locale, locale)
                     .accentColor(.element.accent)
                     .task {
                         applicationCoordinator.start()
@@ -46,5 +47,9 @@ struct Application: App {
     
     private var shouldHideStatusBar: Bool {
         Tests.isRunningUITests
+    }
+    
+    private var locale: Locale {
+        Tests.isRunningUITests ? .current : Locale(identifier: "en")
     }
 }
