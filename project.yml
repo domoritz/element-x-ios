@@ -40,7 +40,7 @@ include:
 packages:
   MatrixRustSDK:
     url: https://github.com/matrix-org/matrix-rust-components-swift
-    exactVersion: 1.0.32-alpha
+    exactVersion: 0.0.1-sliding-sync-fixes
     # path: ../matrix-rust-sdk
   DesignKit:
     path: DesignKit
